@@ -8,8 +8,8 @@ header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers
 // POSTリクエストから値を取得
 $data = json_decode(file_get_contents('php://input'), true);
 
-if (isset($data['name'])) {
-  $name = $data['name'];
+if (isset($data['id'])) {
+  $id = $data['id'];
   
   // データベース接続
   $mysqli = new mysqli('localhost', 'phpuser', 'php', 'phptest');
@@ -20,24 +20,22 @@ if (isset($data['name'])) {
     $mysqli->set_charset("utf8mb4");
   }
 
-  function generateRandomInt() {
-    // 10桁の無作為な数字を生成
-    $int = '';
-    for ($i = 0; $i < 5; $i++) {
-        $int .= mt_rand(0, 9); // 0から9までの乱数を連結
-    }
-    return $int;
-  }
+  // 現在のmineの値を取得
+  $sql = "SELECT mine FROM mycats WHERE id=$id";
+  $result = $mysqli->query($sql);
+  $row = $result->fetch_assoc();
+  $currentMineValue = $row['mine'];
+
+  // mineの値をトグルして更新
+  $newMineValue = $currentMineValue == 0 ? 1 : 0;
   
-  // Create (INSERT)
-    $id = generateRandomInt();
-    $mine = 0;
-    $sql = "INSERT INTO mycats (id, name, mine) VALUES ('$id', '$name', '$mine')";
-    if ($mysqli->query($sql) === TRUE) {
-      echo "New record created successfully";
-    } else {
-      echo "Error: " . $sql . "<br>" . $mysqli->error;
-    }
+  // Update (UPDATE)
+  $updateSql = "UPDATE mycats SET mine='$newMineValue' WHERE id=$id";
+  if ($mysqli->query($updateSql)) {
+    echo "Record updated successfully";
+  } else {
+    echo "Error updating record: " . $mysqli->error;
+  }
 
 } else {
   echo 'Key not found in the request.';
